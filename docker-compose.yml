@@ -1,8 +1,20 @@
 version: "3.9"
 
 services:
+  nginx:
+    container_name: nginx
+    image: nginx:latest
+    volumes:
+      - ./packages/client/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./fifteen_puzzle.pem:/etc/ssl/certs/fifteen_puzzle.pem
+      - ./fifteen_puzzle_key.pem:/etc/ssl/fifteen_puzzle_key.pem
+    ports:
+      - 80:80
+      - 443:443
+    depends_on:
+      - server
   postgres:
-    image: postgres:14     
+    image: postgres:14
     restart: always
     ports:
       - "${POSTGRES_PORT}:${POSTGRES_PORT}"
@@ -12,23 +24,9 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - ./tmp/pgdata:/var/lib/postgresql/data
-  client:
-    container_name: prakticum-client
-    image: prakticum-client
-    build:
-      context: .
-      dockerfile: Dockerfile.client
-      args:
-        CLIENT_PORT: ${CLIENT_PORT}
-    restart: always
-    ports:
-      - "${CLIENT_PORT}:80"
-    environment:
-      - CLIENT_PORT=${CLIENT_PORT}
-      - SERVER_PORT=${SERVER_PORT}
   server:
-    container_name: prakticum-server
     image: prackicum-server
+    container_name: server
     build:
       context: .
       dockerfile: Dockerfile.server
@@ -37,7 +35,6 @@ services:
     depends_on:
       - postgres
     restart: always
-    ports:
-      - "${SERVER_PORT}:${SERVER_PORT}"
     environment:
       SERVER_PORT: ${SERVER_PORT}
+
